@@ -7,10 +7,24 @@ const SHEET_API = "https://script.google.com/macros/s/AKfycbwXx4I8vvKuvjsnEflYyl
 
 async function main() {
 
-  const companyMap = {
-    RELIANCE: { name: 'Reliance Industries', symbol: 'RELIANCE' },
-    TCS: { name: 'Tata Consultancy Services', symbol: 'TCS' }
-  };
+
+async function loadCompanies() {
+  const res = await axios.get(SHEET_API);
+  const list = res.data;
+
+  const map = {};
+
+  for (const c of list) {
+    map[c.symbol] = {
+      name: c.name,
+      symbol: c.symbol
+    };
+  }
+
+  return map;
+}
+
+const companyMap = await loadCompanies();
 
   const seenSet = new Set();
 
