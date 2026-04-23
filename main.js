@@ -36,7 +36,12 @@ console.log("TOTAL ITEMS:", raw.length);
 console.log("SAMPLE ITEM:", raw[0]);
 console.log("COMPANIES LOADED:", Object.keys(companyMap).length);
 
-  const processed = matchCompanies(raw, companyMap, seenSet);
+  const processed = raw.slice(0, 5).map(item => ({
+  ...item,
+  company: "UNFILTERED",
+  symbol: "NA",
+  id: Date.now() + Math.random()
+}));
 
  if (processed.length === 0) {
   console.log('No matches, sending test row');

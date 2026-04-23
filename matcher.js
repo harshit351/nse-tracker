@@ -34,7 +34,9 @@ function matchCompanies(items, companyMap, seenSet) {
     if (seenSet.has(id)) continue;
 
     const text = normalize((item.title || "") + " " + (item.description || ""));
-
+if (text.includes("PAPER")) {
+  console.log("PAPER FOUND IN:", item.title);
+}
     let bestMatch = null;
     let bestScore = 0;
 
