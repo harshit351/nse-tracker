@@ -8,22 +8,16 @@ function generateId(item) {
     .digest('hex');
 }
 
-
 function normalize(text) {
   if (!text) return "";
 
   return text
-    .toString()
     .toUpperCase()
-    .replace(/LTD|LIMITED|PVT|PRIVATE/g, '')
-    .replace(/[^A-Z0-9 ]/g, '')
+    .replace(/LIMITED|LTD|PVT|PRIVATE|INDUSTRIES|INDUSTRY/g, '')
+    .replace(/[^A-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 }
-
-
-
-
-
 
 function matchCompanies(items, companies, seenSet) {
 
@@ -43,24 +37,31 @@ function matchCompanies(items, companies, seenSet) {
 
       let score = 0;
 
-      // 🔥 NSE symbol match (strong)
-      if (company.nse && text.includes(company.nse)) {
-        score += 3;
-      }
+      // 🔥 NSE symbol (strong)
+      if (company.nse && text.includes(company.nse)) score += 4;
 
-      // 🔥 BSE code match (medium)
-      if (company.bse && text.includes(company.bse)) {
-        score += 2;
-      }
+      // 🔥 BSE code (medium)
+      if (company.bse && text.includes(company.bse)) score += 2;
 
-      // 🔥 Name match (important)
-      const words = normalize(company.name).split(" ");
+      // 🔥 Name matching
+      const companyName = normalize(company.name);
+      const words = companyName.split(" ").filter(w => w.length > 3);
+
+      let wordMatches = 0;
 
       for (const w of words) {
-        if (w.length < 3) continue;
-        if (text.includes(w)) score++;
+        if (text.includes(w)) {
+          wordMatches++;
+        }
       }
 
+      if (wordMatches >= 2) {
+        score += 3;
+      } else if (wordMatches === 1) {
+        score += 1;
+      }
+
+      // ✅ THIS WAS MISSING
       if (score > bestScore) {
         bestScore = score;
         bestMatch = company;
@@ -68,7 +69,7 @@ function matchCompanies(items, companies, seenSet) {
     }
 
     // threshold tuned
-    if (bestScore >= 2 && bestMatch) {
+    if (bestScore >= 3 && bestMatch) {
       results.push({
         ...item,
         company: bestMatch.name,
@@ -82,7 +83,6 @@ function matchCompanies(items, companies, seenSet) {
 
   return results;
 }
-
 
 module.exports = { matchCompanies };
 
