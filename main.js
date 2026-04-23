@@ -18,10 +18,18 @@ async function main() {
 
   const processed = matchCompanies(raw, companyMap, seenSet);
 
-  if (processed.length === 0) {
-    console.log('No new items');
-    return;
-  }
+ if (processed.length === 0) {
+  console.log('No matches, sending test row');
+
+  await axios.post(SHEET_API, [{
+    company: "TEST",
+    title: "Test Entry",
+    link: "https://test.com",
+    id: Date.now()
+  }]);
+
+  return;
+}
 
   await axios.post(SHEET_API, processed);
 
