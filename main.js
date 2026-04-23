@@ -3,6 +3,7 @@ const axios = require('axios');
 const { fetchAllFeeds } = require('./fetch');
 const { matchCompanies } = require('./matcher');
 
+
 const SHEET_API = "https://script.google.com/macros/s/AKfycbwXx4I8vvKuvjsnEflYylCgHU9dCJGZrtuTzRVi4ZrnFJ1QwFk1i5Ik2Hi_Ky-bV18fTQ/exec";
 
 async function main() {
@@ -29,6 +30,10 @@ const companyMap = await loadCompanies();
   const seenSet = new Set();
 
 const raw = await fetchAllFeeds();
+
+
+console.log("TOTAL ITEMS:", raw.length);
+console.log("SAMPLE ITEM:", raw[0]);
 
   const processed = matchCompanies(raw, companyMap, seenSet);
 
