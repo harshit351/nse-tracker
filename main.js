@@ -12,6 +12,8 @@ async function loadCompanies() {
 
 async function main() {
   try {
+    console.log("----- RUN START -----");
+
     const companies = await loadCompanies();
     console.log("COMPANIES LOADED:", companies.length);
 
@@ -21,28 +23,22 @@ async function main() {
     const processed = matchCompanies(raw, companies, new Set());
 
     if (processed.length === 0) {
-      console.log("No matches, sending test row");
-
-      await axios.post(SHEET_API, [{
-        company: "TEST",
-        title: "Test Entry",
-        link: "https://test.com",
-        id: Date.now()
-      }]);
-
+      console.log("No matches found");
       return;
     }
 
     await axios.post(SHEET_API, processed);
 
-    console.log(`Pushed ${processed.length} items`);
+    console.log(`Sent ${processed.length} items to sheet`);
 
   } catch (err) {
     console.error("ERROR:", err.message);
   }
 }
 
-main(); // run once immediately
+// 🔁 Run immediately
+main();
 
-setInterval(main, 45 * 60 * 1000); // run every 45 minutes
+// 🔁 Run every 15 minutes
+setInterval(main, 15 * 60 * 1000);
 
