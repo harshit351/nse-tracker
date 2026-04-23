@@ -34,6 +34,7 @@ const raw = await fetchAllFeeds();
 
 console.log("TOTAL ITEMS:", raw.length);
 console.log("SAMPLE ITEM:", raw[0]);
+console.log("COMPANIES LOADED:", Object.keys(companyMap).length);
 
   const processed = matchCompanies(raw, companyMap, seenSet);
 
