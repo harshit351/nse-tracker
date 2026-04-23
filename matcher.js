@@ -29,6 +29,7 @@ function matchCompanies(items, companyMap, seenSet) {
   const results = [];
 
   for (const item of items) {
+  // 🔥 FILTER FIRST
 
     const id = generateId(item);
     if (seenSet.has(id)) continue;
