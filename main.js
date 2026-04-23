@@ -42,6 +42,5 @@ async function main() {
   }
 }
 
-// ✅ IMPORTANT — this is what runs it
 main();
 
