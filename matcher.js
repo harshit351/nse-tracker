@@ -23,6 +23,7 @@ function normalize(text) {
 
 
 
+
 function matchCompanies(items, companyMap, seenSet) {
 
   const results = [];
@@ -34,46 +35,47 @@ function matchCompanies(items, companyMap, seenSet) {
 
     const text = normalize((item.title || "") + " " + (item.description || ""));
 
-    let matched = null;
+    let bestMatch = null;
+    let bestScore = 0;
 
     for (const symbol in companyMap) {
 
       const company = companyMap[symbol];
 
-      // 🔥 Break company name into keywords
-      const words = normalize(company.name)
-        .split(" ")
-        .filter(w => w.length > 3); // ignore small words
+      const words = normalize(company.name).split(" ");
 
-      let matchCount = 0;
+      let score = 0;
 
       for (const w of words) {
-        if (text.includes(w)) {
-          matchCount++;
-        }
+        if (w.length < 2) continue; // ignore garbage, keep short valid like JK
+        if (text.includes(w)) score++;
       }
 
-      // 🔥 If 2+ words match → strong signal
-      if (matchCount >= 2) {
-        matched = company;
-        break;
+      // bonus if symbol appears
+      if (text.includes(symbol)) score += 2;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = company;
       }
     }
 
-    if (!matched) continue;
+    // 🔥 threshold = 2 (tuned for your dataset)
+    if (bestScore >= 2 && bestMatch) {
+      results.push({
+        ...item,
+        company: bestMatch.name,
+        symbol: bestMatch.symbol,
+        id
+      });
 
-    results.push({
-      ...item,
-      company: matched.name,
-      symbol: matched.symbol,
-      id
-    });
-
-    seenSet.add(id);
+      seenSet.add(id);
+    }
   }
 
   return results;
 }
+
 
 module.exports = { matchCompanies };
 
