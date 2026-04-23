@@ -40,5 +40,5 @@ async function main() {
 main();
 
 // 🔁 Run every 15 minutes
-setInterval(main, 15 * 60 * 1000);
+setInterval(main, 5 * 60 * 1000);
 
