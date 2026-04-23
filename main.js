@@ -6,20 +6,43 @@ const { matchCompanies } = require('./matcher');
 
 const SHEET_API = "https://script.google.com/macros/s/AKfycbwXx4I8vvKuvjsnEflYylCgHU9dCJGZrtuTzRVi4ZrnFJ1QwFk1i5Ik2Hi_Ky-bV18fTQ/exec";
 
+
+
 async function main() {
 
+  const companyMap = await loadCompanies();  // ✅ correct place
 
+  console.log("COMPANIES LOADED:", companyMap.length);
 
-async function loadCompanies() {
-  const res = await axios.get(SHEET_API);
-  const list = res.data;
+  const raw = await fetchAllFeeds();
 
-  return list; // no mapping into symbol map anymore
+  console.log("TOTAL ITEMS:", raw.length);
+
+  const processed = matchCompanies(raw, companyMap, new Set());
+
+  if (processed.length === 0) {
+    console.log("No matches, sending test row");
+
+    await axios.post(SHEET_API, [{
+      company: "TEST",
+      title: "Test Entry",
+      link: "https://test.com",
+      id: Date.now()
+    }]);
+
+    return;
+  }
+
+  await axios.post(SHEET_API, processed);
+
+  console.log(`Pushed ${processed.length} items`);
 }
 
-}
 
-const companyMap = await loadCompanies();
+
+
+
+
 
   const seenSet = new Set();
 
