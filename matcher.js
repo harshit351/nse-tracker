@@ -8,13 +8,19 @@ function generateId(item) {
     .digest('hex');
 }
 
+
 function normalize(text) {
+  if (!text) return "";
+
   return text
+    .toString()
     .toUpperCase()
     .replace(/LTD|LIMITED|PVT|PRIVATE/g, '')
     .replace(/[^A-Z0-9 ]/g, '')
     .trim();
 }
+
+
 
 function matchCompanies(items, companyMap, seenSet) {
 
@@ -25,7 +31,7 @@ function matchCompanies(items, companyMap, seenSet) {
     const id = generateId(item);
     if (seenSet.has(id)) continue;
 
-    const text = normalize(item.title + ' ' + item.description);
+   const text = normalize((item.title || "") + " " + (item.description || ""));
 
     let matched = null;
 
