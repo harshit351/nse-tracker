@@ -8,23 +8,43 @@ function generateId(item) {
     .digest('hex');
 }
 
+function normalize(text) {
+  return text
+    .toUpperCase()
+    .replace(/LTD|LIMITED|PVT|PRIVATE/g, '')
+    .replace(/[^A-Z0-9 ]/g, '')
+    .trim();
+}
+
 function matchCompanies(items, companyMap, seenSet) {
+
   const results = [];
 
   for (const item of items) {
-    const id = generateId(item);
 
+    const id = generateId(item);
     if (seenSet.has(id)) continue;
 
-    const text = (item.title + ' ' + item.description).toUpperCase();
-    const tokens = text.match(/\b[A-Z0-9]{3,15}\b/g) || [];
+    const text = normalize(item.title + ' ' + item.description);
 
     let matched = null;
 
-    for (const t of tokens) {
-      if (companyMap[t]) {
-        matched = companyMap[t];
+    // 🔥 1. Symbol match (fast)
+    for (const symbol in companyMap) {
+      if (text.includes(symbol)) {
+        matched = companyMap[symbol];
         break;
+      }
+    }
+
+    // 🔥 2. Name match (important)
+    if (!matched) {
+      for (const symbol in companyMap) {
+        const name = normalize(companyMap[symbol].name);
+        if (name.length > 5 && text.includes(name)) {
+          matched = companyMap[symbol];
+          break;
+        }
       }
     }
 

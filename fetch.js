@@ -1,32 +1,22 @@
 
 const axios = require('axios');
-const xml2js = require('xml2js');
 
-const NSE_URL = 'https://nse-tracker-harshit351worker.harshit351.workers.dev';
+const API_URL = 'https://nse-tracker-harshit351worker.harshit351.workers.dev';
 
-async function fetchNSE() {
+async function fetchAllFeeds() {
   try {
-    const res = await axios.get(NSE_URL, {
+    const res = await axios.get(API_URL, {
       timeout: 15000
     });
 
-    console.log('Fetched XML via proxy');
+    console.log('Fetched JSON from worker');
 
-    const parsed = await xml2js.parseStringPromise(res.data);
-
-    const items = parsed.rss.channel[0].item;
-
-    return items.slice(0, 20).map(item => ({
-      title: item.title?.[0] || '',
-      link: item.link?.[0] || '',
-      description: item.description?.[0] || '',
-      pubDate: item.pubDate?.[0] || ''
-    }));
+    return res.data;
 
   } catch (err) {
-    console.error('Fetch error:', err.response?.status || err.message);
+    console.error('Fetch error:', err.message);
     return [];
   }
 }
 
-module.exports = { fetchNSE };
+module.exports = { fetchAllFeeds };
