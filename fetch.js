@@ -1,4 +1,4 @@
-
+```javascript
 const axios = require('axios');
 const xml2js = require('xml2js');
 const { wrapper } = require('axios-cookiejar-support');
@@ -9,22 +9,31 @@ const client = wrapper(axios.create({ jar }));
 
 const NSE_URL = 'https://nsearchives.nseindia.com/content/corporate/CORPORATE_ANNOUNCEMENTS.xml';
 
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+  'Accept': 'application/xml, text/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Referer': 'https://www.nseindia.com/',
+  'Connection': 'keep-alive'
+};
+
 async function fetchNSE() {
   try {
+    // Step 1: Hit homepage to get cookies
     await client.get('https://www.nseindia.com', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
+      headers: HEADERS
     });
 
+    // Small delay (important)
+    await new Promise(r => setTimeout(r, 1500));
+
+    // Step 2: Fetch XML
     const res = await client.get(NSE_URL, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': 'application/xml'
-      },
+      headers: HEADERS,
       timeout: 15000
     });
+
+    console.log('Fetched XML');
 
     const parsed = await xml2js.parseStringPromise(res.data);
 
@@ -38,10 +47,10 @@ async function fetchNSE() {
     }));
 
   } catch (err) {
-    console.error('Fetch error:', err.message);
+    console.error('Fetch error:', err.response?.status || err.message);
     return [];
   }
 }
 
 module.exports = { fetchNSE };
-
+```
