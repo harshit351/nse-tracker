@@ -42,5 +42,7 @@ async function main() {
   }
 }
 
-main();
+main(); // run once immediately
+
+setInterval(main, 45 * 60 * 1000); // run every 45 minutes
 
