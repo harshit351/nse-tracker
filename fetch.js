@@ -7,7 +7,7 @@ const tough = require('tough-cookie');
 const jar = new tough.CookieJar();
 const client = wrapper(axios.create({ jar }));
 
-const NSE_URL = 'https://your-worker-name.workers.dev';
+const NSE_URL = 'https://nse-tracker-harshit351worker.harshit351.workers.dev/';
 
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
