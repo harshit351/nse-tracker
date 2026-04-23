@@ -3,7 +3,7 @@ const axios = require('axios');
 const { fetchNSE } = require('./fetch');
 const { matchCompanies } = require('./matcher');
 
-const SHEET_API = "YOUR_WEB_APP_URL";
+const SHEET_API = "https://script.google.com/macros/s/AKfycbwXx4I8vvKuvjsnEflYylCgHU9dCJGZrtuTzRVi4ZrnFJ1QwFk1i5Ik2Hi_Ky-bV18fTQ/exec";
 
 async function main() {
 
