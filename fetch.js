@@ -1,4 +1,4 @@
-```javascript
+
 const axios = require('axios');
 const xml2js = require('xml2js');
 const { wrapper } = require('axios-cookiejar-support');
@@ -53,4 +53,4 @@ async function fetchNSE() {
 }
 
 module.exports = { fetchNSE };
-```
+
