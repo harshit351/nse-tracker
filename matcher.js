@@ -22,6 +22,7 @@ function normalize(text) {
 
 
 
+
 function matchCompanies(items, companyMap, seenSet) {
 
   const results = [];
@@ -31,26 +32,31 @@ function matchCompanies(items, companyMap, seenSet) {
     const id = generateId(item);
     if (seenSet.has(id)) continue;
 
-   const text = normalize((item.title || "") + " " + (item.description || ""));
+    const text = normalize((item.title || "") + " " + (item.description || ""));
 
     let matched = null;
 
-    // 🔥 1. Symbol match (fast)
     for (const symbol in companyMap) {
-      if (text.includes(symbol)) {
-        matched = companyMap[symbol];
-        break;
-      }
-    }
 
-    // 🔥 2. Name match (important)
-    if (!matched) {
-      for (const symbol in companyMap) {
-        const name = normalize(companyMap[symbol].name);
-        if (name.length > 5 && text.includes(name)) {
-          matched = companyMap[symbol];
-          break;
+      const company = companyMap[symbol];
+
+      // 🔥 Break company name into keywords
+      const words = normalize(company.name)
+        .split(" ")
+        .filter(w => w.length > 3); // ignore small words
+
+      let matchCount = 0;
+
+      for (const w of words) {
+        if (text.includes(w)) {
+          matchCount++;
         }
+      }
+
+      // 🔥 If 2+ words match → strong signal
+      if (matchCount >= 2) {
+        matched = company;
+        break;
       }
     }
 
