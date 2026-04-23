@@ -24,38 +24,42 @@ function normalize(text) {
 
 
 
-function matchCompanies(items, companyMap, seenSet) {
+
+function matchCompanies(items, companies, seenSet) {
 
   const results = [];
 
   for (const item of items) {
-  // 🔥 FILTER FIRST
 
     const id = generateId(item);
     if (seenSet.has(id)) continue;
 
     const text = normalize((item.title || "") + " " + (item.description || ""));
-if (text.includes("PAPER")) {
-  console.log("PAPER FOUND IN:", item.title);
-}
+
     let bestMatch = null;
     let bestScore = 0;
 
-    for (const symbol in companyMap) {
-
-      const company = companyMap[symbol];
-
-      const words = normalize(company.name).split(" ");
+    for (const company of companies) {
 
       let score = 0;
 
-      for (const w of words) {
-        if (w.length < 2) continue; // ignore garbage, keep short valid like JK
-        if (text.includes(w)) score++;
+      // 🔥 NSE symbol match (strong)
+      if (company.nse && text.includes(company.nse)) {
+        score += 3;
       }
 
-      // bonus if symbol appears
-      if (text.includes(symbol)) score += 2;
+      // 🔥 BSE code match (medium)
+      if (company.bse && text.includes(company.bse)) {
+        score += 2;
+      }
+
+      // 🔥 Name match (important)
+      const words = normalize(company.name).split(" ");
+
+      for (const w of words) {
+        if (w.length < 3) continue;
+        if (text.includes(w)) score++;
+      }
 
       if (score > bestScore) {
         bestScore = score;
@@ -63,12 +67,12 @@ if (text.includes("PAPER")) {
       }
     }
 
-    // 🔥 threshold = 2 (tuned for your dataset)
+    // threshold tuned
     if (bestScore >= 2 && bestMatch) {
       results.push({
         ...item,
         company: bestMatch.name,
-        symbol: bestMatch.symbol,
+        symbol: bestMatch.nse || bestMatch.bse,
         id
       });
 

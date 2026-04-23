@@ -9,20 +9,14 @@ const SHEET_API = "https://script.google.com/macros/s/AKfycbwXx4I8vvKuvjsnEflYyl
 async function main() {
 
 
+
 async function loadCompanies() {
   const res = await axios.get(SHEET_API);
   const list = res.data;
 
-  const map = {};
+  return list; // no mapping into symbol map anymore
+}
 
-  for (const c of list) {
-    map[c.symbol] = {
-      name: c.name,
-      symbol: c.symbol
-    };
-  }
-
-  return map;
 }
 
 const companyMap = await loadCompanies();
