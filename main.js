@@ -20,25 +20,32 @@ console.log("RUN TIME:", new Date().toISOString()); //
     const raw = await fetchAllFeeds();
     console.log("TOTAL ITEMS:", raw.length);
 
+
 // ==============================
-// 🔍 FEED WINDOW ANALYSIS
+// 🔍 RECENT FEED WINDOW (FIXED)
 // ==============================
-const dates = raw
+
+const now = new Date();
+const cutoff = new Date(now - 60 * 60 * 1000); // last 60 minutes
+
+const recentDates = raw
   .map(x => new Date(x.pubDate))
-  .filter(d => !isNaN(d));
+  .filter(d => !isNaN(d) && d > cutoff);
 
-dates.sort((a, b) => a - b);
+recentDates.sort((a, b) => a - b);
 
-if (dates.length > 0) {
-  const oldest = dates[0];
-  const newest = dates[dates.length - 1];
+if (recentDates.length > 0) {
+  const oldest = recentDates[0];
+  const newest = recentDates[recentDates.length - 1];
 
   const diffMinutes = (newest - oldest) / (1000 * 60);
 
-  console.log("FEED WINDOW (minutes):", diffMinutes.toFixed(2));
-  console.log("OLDEST:", oldest.toISOString());
-  console.log("NEWEST:", newest.toISOString());
+  console.log("RECENT WINDOW (minutes):", diffMinutes.toFixed(2));
+  console.log("RECENT OLDEST:", oldest.toISOString());
+  console.log("RECENT NEWEST:", newest.toISOString());
 }
+
+
 
 // ==============================
 // ⚡ BURST DENSITY CHECK
