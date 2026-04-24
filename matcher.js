@@ -1,10 +1,9 @@
-
 const crypto = require('crypto');
 
 function generateId(item) {
   return crypto
     .createHash('md5')
-    .update(item.link + item.title)
+    .update((item.link || '') + (item.title || ''))
     .digest('hex');
 }
 
@@ -19,6 +18,21 @@ function normalize(text) {
     .trim();
 }
 
+// Extract BSE scrip code from title like: "ABC Ltd (532123)"
+function extractBSECode(title) {
+  if (!title) return null;
+  const match = title.match(/\((\d{5,6})\)/);
+  return match ? match[1] : null;
+}
+
+// Extract NSE symbol from link (very reliable for NSE)
+function extractNSESymbol(link) {
+  if (!link) return null;
+
+  const match = link.match(/\/corporate\/([A-Z0-9]+)_/);
+  return match ? match[1] : null;
+}
+
 function matchCompanies(items, companies, seenSet) {
 
   const results = [];
@@ -28,52 +42,86 @@ function matchCompanies(items, companies, seenSet) {
     const id = generateId(item);
     if (seenSet.has(id)) continue;
 
-    const text = normalize((item.title || "") + " " + (item.description || ""));
+    const title = item.title || "";
+    const text = normalize(title); // 🚨 ONLY TITLE (no description)
 
-    let bestMatch = null;
-    let bestScore = 0;
+    const bseCode = extractBSECode(title);
+    const nseSymbol = extractNSESymbol(item.link);
+
+    let matchedCompany = null;
+
+    // =====================================================
+    // 🔥 STEP 1: HARD MATCH (100% RELIABLE)
+    // =====================================================
 
     for (const company of companies) {
 
-      let score = 0;
-
-      // 🔥 NSE symbol (strong)
-      if (company.nse && text.includes(company.nse)) score += 4;
-
-      // 🔥 BSE code (medium)
-      if (company.bse && text.includes(company.bse)) score += 2;
-
-      // 🔥 Name matching
-      const companyName = normalize(company.name);
-      const words = companyName.split(" ").filter(w => w.length > 3);
-
-      let wordMatches = 0;
-
-      for (const w of words) {
-        if (text.includes(w)) {
-          wordMatches++;
-        }
+      if (company.bse && bseCode && company.bse === bseCode) {
+        matchedCompany = company;
+        break;
       }
 
-      if (wordMatches >= 2) {
-        score += 3;
-      } else if (wordMatches === 1) {
-        score += 1;
-      }
-
-      // ✅ THIS WAS MISSING
-      if (score > bestScore) {
-        bestScore = score;
-        bestMatch = company;
+      if (company.nse && nseSymbol && company.nse === nseSymbol) {
+        matchedCompany = company;
+        break;
       }
     }
 
-    // threshold tuned
-    if (bestScore >= 3 && bestMatch) {
+    // =====================================================
+    // 🔥 STEP 2: STRICT NAME MATCH (fallback only)
+    // =====================================================
+
+    if (!matchedCompany) {
+
+      let bestScore = 0;
+      let bestMatch = null;
+
+      for (const company of companies) {
+
+        const companyName = normalize(company.name);
+
+        const words = companyName
+          .split(" ")
+          .filter(w =>
+            w.length > 3 &&
+            !["POWER", "PAPER", "POLY", "FILM", "INDIA"].includes(w)
+          );
+
+        let matches = 0;
+
+        for (const w of words) {
+          if (text.includes(w)) {
+            matches++;
+          }
+        }
+
+        let score = 0;
+
+        if (matches >= 2) score = 5;
+        else if (matches === 1) score = 1;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = company;
+        }
+      }
+
+      // 🚨 STRICT THRESHOLD
+      if (bestScore >= 5) {
+        matchedCompany = bestMatch;
+      }
+    }
+
+    // =====================================================
+    // ✅ FINAL PUSH
+    // =====================================================
+
+    if (matchedCompany) {
+
       results.push({
         ...item,
-        company: bestMatch.name,
-        symbol: bestMatch.nse || bestMatch.bse,
+        company: matchedCompany.name,
+        symbol: matchedCompany.nse || matchedCompany.bse,
         id
       });
 
@@ -85,4 +133,3 @@ function matchCompanies(items, companies, seenSet) {
 }
 
 module.exports = { matchCompanies };
-
