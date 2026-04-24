@@ -13,12 +13,42 @@ async function loadCompanies() {
 async function main() {
   try {
     console.log("----- RUN START -----");
-
+console.log("RUN TIME:", new Date().toISOString()); //
     const companies = await loadCompanies();
     console.log("COMPANIES LOADED:", companies.length);
 
     const raw = await fetchAllFeeds();
     console.log("TOTAL ITEMS:", raw.length);
+
+// ==============================
+// 🔍 FEED WINDOW ANALYSIS
+// ==============================
+const dates = raw
+  .map(x => new Date(x.pubDate))
+  .filter(d => !isNaN(d));
+
+dates.sort((a, b) => a - b);
+
+if (dates.length > 0) {
+  const oldest = dates[0];
+  const newest = dates[dates.length - 1];
+
+  const diffMinutes = (newest - oldest) / (1000 * 60);
+
+  console.log("FEED WINDOW (minutes):", diffMinutes.toFixed(2));
+  console.log("OLDEST:", oldest.toISOString());
+  console.log("NEWEST:", newest.toISOString());
+}
+
+// ==============================
+// ⚡ BURST DENSITY CHECK
+// ==============================
+const last5min = new Date(Date.now() - 5 * 60 * 1000);
+
+const recentItems = raw.filter(x => {
+  const d = new Date(x.pubDate);
+  return !isNaN(d) && d > last5min;
+});
 
     const processed = matchCompanies(raw, companies, new Set());
 
