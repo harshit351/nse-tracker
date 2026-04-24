@@ -1,3 +1,4 @@
+
 const crypto = require('crypto');
 
 function generateId(item) {
@@ -18,17 +19,17 @@ function normalize(text) {
     .trim();
 }
 
-// Extract BSE scrip code from title like: "ABC Ltd (532123)"
+// Extract BSE code from title like: "ABC Ltd (532123)"
 function extractBSECode(title) {
   if (!title) return null;
   const match = title.match(/\((\d{5,6})\)/);
   return match ? match[1] : null;
 }
 
-// Extract NSE symbol from link (very reliable for NSE)
+// Extract NSE symbol from link like:
+// https://nsearchives.nseindia.com/corporate/DIACABS_...
 function extractNSESymbol(link) {
   if (!link) return null;
-
   const match = link.match(/\/corporate\/([A-Z0-9]+)_/);
   return match ? match[1] : null;
 }
@@ -43,7 +44,7 @@ function matchCompanies(items, companies, seenSet) {
     if (seenSet.has(id)) continue;
 
     const title = item.title || "";
-    const text = normalize(title); // 🚨 ONLY TITLE (no description)
+    const text = normalize(title);
 
     const bseCode = extractBSECode(title);
     const nseSymbol = extractNSESymbol(item.link);
@@ -51,16 +52,18 @@ function matchCompanies(items, companies, seenSet) {
     let matchedCompany = null;
 
     // =====================================================
-    // 🔥 STEP 1: HARD MATCH (100% RELIABLE)
+    // ✅ STEP 1: HARD MATCH (ONLY TRUST THESE)
     // =====================================================
 
     for (const company of companies) {
 
+      // BSE exact match
       if (company.bse && bseCode && company.bse === bseCode) {
         matchedCompany = company;
         break;
       }
 
+      // NSE exact match
       if (company.nse && nseSymbol && company.nse === nseSymbol) {
         matchedCompany = company;
         break;
@@ -68,13 +71,13 @@ function matchCompanies(items, companies, seenSet) {
     }
 
     // =====================================================
-    // 🔥 STEP 2: STRICT NAME MATCH (fallback only)
+    // 🚨 STEP 2: STRICT NAME MATCH (ONLY IF NO IDENTIFIERS)
     // =====================================================
 
-    if (!matchedCompany) {
+    if (!matchedCompany && !bseCode && !nseSymbol) {
 
-      let bestScore = 0;
       let bestMatch = null;
+      let bestScore = 0;
 
       for (const company of companies) {
 
@@ -83,9 +86,15 @@ function matchCompanies(items, companies, seenSet) {
         const words = companyName
           .split(" ")
           .filter(w =>
-            w.length > 3 &&
-            !["POWER", "PAPER", "POLY", "FILM", "INDIA"].includes(w)
+            w.length > 4 && // stricter words only
+            ![
+              "POWER", "PAPER", "POLY", "FILM",
+              "INDIA", "LIMITED", "INDUSTRIES",
+              "CORPORATION", "GROUP"
+            ].includes(w)
           );
+
+        if (words.length === 0) continue;
 
         let matches = 0;
 
@@ -95,25 +104,25 @@ function matchCompanies(items, companies, seenSet) {
           }
         }
 
-        let score = 0;
+        // Only accept strong matches
+        if (matches >= 2) {
+          let score = matches;
 
-        if (matches >= 2) score = 5;
-        else if (matches === 1) score = 1;
-
-        if (score > bestScore) {
-          bestScore = score;
-          bestMatch = company;
+          if (score > bestScore) {
+            bestScore = score;
+            bestMatch = company;
+          }
         }
       }
 
-      // 🚨 STRICT THRESHOLD
-      if (bestScore >= 5) {
+      // Only accept if strong confidence
+      if (bestScore >= 2 && bestMatch) {
         matchedCompany = bestMatch;
       }
     }
 
     // =====================================================
-    // ✅ FINAL PUSH
+    // ✅ FINAL OUTPUT (ONLY IF MATCHED)
     // =====================================================
 
     if (matchedCompany) {
@@ -127,6 +136,8 @@ function matchCompanies(items, companies, seenSet) {
 
       seenSet.add(id);
     }
+
+    // ❌ else: skip completely (NO RANDOM MATCHING)
   }
 
   return results;
