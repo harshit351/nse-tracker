@@ -13,7 +13,7 @@ async function loadCompanies() {
 async function main() {
   try {
     console.log("----- RUN START -----");
-console.log("RUN TIME:", new Date().toISOString()); //
+console.log("RUN TIME (IST):", new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }));
     const companies = await loadCompanies();
     console.log("COMPANIES LOADED:", companies.length);
 
